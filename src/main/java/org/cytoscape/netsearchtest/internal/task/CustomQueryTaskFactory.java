@@ -23,6 +23,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import org.cytoscape.application.swing.search.NetworkSearchTaskFactory;
 import org.cytoscape.service.util.CyServiceRegistrar;
@@ -39,8 +41,7 @@ public class CustomQueryTaskFactory implements NetworkSearchTaskFactory {
 	private static final String DESCRIPTION = "Provides its own Query UI component";
 	private final Icon ICON;
 	
-	private JComboBox<String> organismCombo;
-	private JTextField searchTextField;
+	private QueryBar queryBar;
 	
 	private final CyServiceRegistrar serviceRegistrar;
 	
@@ -51,25 +52,11 @@ public class CustomQueryTaskFactory implements NetworkSearchTaskFactory {
 	
 	@Override
 	public JComponent getQueryComponent() {
-		JPanel p = new JPanel();
+		if (queryBar == null) {
+			queryBar = new QueryBar();
+		}
 		
-		final GroupLayout layout = new GroupLayout(p);
-		p.setLayout(layout);
-		layout.setAutoCreateContainerGaps(false);
-		layout.setAutoCreateGaps(false);
-		
-		layout.setHorizontalGroup(layout.createSequentialGroup()
-				.addComponent(getOrganismCombo(), PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)
-				.addComponent(getSearchTextField(), DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
-		);
-		layout.setVerticalGroup(layout.createParallelGroup(CENTER, true)
-				.addGap(0, 0, Short.MAX_VALUE)
-				.addComponent(getOrganismCombo(), DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
-				.addComponent(getSearchTextField(), DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
-				.addGap(0, 0, Short.MAX_VALUE)
-		);
-		
-		return p;
+		return queryBar;
 	}
 	
 	@Override
@@ -82,7 +69,8 @@ public class CustomQueryTaskFactory implements NetworkSearchTaskFactory {
 		return new TaskIterator(new AbstractTask() {
 			@Override
 			public void run(TaskMonitor tm) throws Exception {
-				System.out.println("- Network Search [" + getName() + "]: " + getSearchTextField().getText());
+				System.out.println(
+						"- Network Search [" + getName() + "]: " + ((QueryBar) getQueryComponent()).getQuery());
 			}
 		});
 	}
@@ -119,47 +107,102 @@ public class CustomQueryTaskFactory implements NetworkSearchTaskFactory {
 
 	@Override
 	public boolean isReady() {
-		String query = getSearchTextField().getText();
-		
-		return query != null && !query.trim().isEmpty() && getOrganismCombo().getSelectedItem() != null;
+		return ((QueryBar) getQueryComponent()).isReady();
 	}
 	
 	@SuppressWarnings("serial")
-	private JComboBox<String> getOrganismCombo() {
-		if (organismCombo == null) {
-			DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
-			model.addElement(IconManager.ICON_MALE);
-			model.addElement(IconManager.ICON_PAW);
-			model.addElement(IconManager.ICON_LEAF);
-			model.addElement(IconManager.ICON_BUG);
+	private class QueryBar extends JPanel {
+		
+		private JComboBox<String> organismCombo;
+		private JTextField searchTextField;
+		
+		public QueryBar() {
+			final GroupLayout layout = new GroupLayout(this);
+			this.setLayout(layout);
+			layout.setAutoCreateContainerGaps(false);
+			layout.setAutoCreateGaps(false);
 			
-			final Font font = serviceRegistrar.getService(IconManager.class).getIconFont(18.0f);
-			
-			organismCombo = new JComboBox<>(model);
-			organismCombo.setFont(font);
-			organismCombo.setRenderer(new DefaultListCellRenderer() {
-				@Override
-				public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-						boolean isSelected, boolean cellHasFocus) {
-					super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-					setFont(font);
-					setHorizontalAlignment(SwingConstants.CENTER);
-					
-					return this;
-				}
-			});
+			layout.setHorizontalGroup(layout.createSequentialGroup()
+					.addComponent(getOrganismCombo(), PREFERRED_SIZE, DEFAULT_SIZE, PREFERRED_SIZE)
+					.addComponent(getSearchTextField(), DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
+			);
+			layout.setVerticalGroup(layout.createParallelGroup(CENTER, true)
+					.addGap(0, 0, Short.MAX_VALUE)
+					.addComponent(getOrganismCombo(), DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
+					.addComponent(getSearchTextField(), DEFAULT_SIZE, DEFAULT_SIZE, Short.MAX_VALUE)
+					.addGap(0, 0, Short.MAX_VALUE)
+			);
 		}
 		
-		return organismCombo;
-	}
-	
-	private JTextField getSearchTextField() {
-		if (searchTextField == null) {
-			searchTextField = new JTextField();
-			searchTextField.setMinimumSize(getOrganismCombo().getPreferredSize());
+		String getQuery() {
+			return getSearchTextField().getText();
 		}
 		
-		return searchTextField;
+		boolean isReady() {
+			String query = getQuery();
+			// Let's pretend the query string must have at least 3 characters
+			return query != null && query.trim().length() > 2 && getOrganismCombo().getSelectedItem() != null;
+		}
+		
+		private JComboBox<String> getOrganismCombo() {
+			if (organismCombo == null) {
+				DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
+				model.addElement(IconManager.ICON_MALE);
+				model.addElement(IconManager.ICON_PAW);
+				model.addElement(IconManager.ICON_LEAF);
+				model.addElement(IconManager.ICON_BUG);
+				
+				final Font font = serviceRegistrar.getService(IconManager.class).getIconFont(18.0f);
+				
+				organismCombo = new JComboBox<>(model);
+				organismCombo.setFont(font);
+				organismCombo.setRenderer(new DefaultListCellRenderer() {
+					@Override
+					public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+							boolean isSelected, boolean cellHasFocus) {
+						super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+						setFont(font);
+						setHorizontalAlignment(SwingConstants.CENTER);
+						
+						return this;
+					}
+				});
+			}
+			
+			return organismCombo;
+		}
+		
+		private JTextField getSearchTextField() {
+			if (searchTextField == null) {
+				searchTextField = new JTextField();
+				searchTextField.setMinimumSize(getOrganismCombo().getPreferredSize());
+				
+				// Since we provide our own search component, it should let Cytoscape know
+				// when it has been updated by the user, so Cytoscape can give a better
+				// feedback to the user of whether or not the whole search component is ready
+				// (e.g. Cytoscape may enable or disable the search button)
+				searchTextField.getDocument().addDocumentListener(new DocumentListener() {
+					@Override
+					public void removeUpdate(DocumentEvent e) {
+						fireQueryChanged();
+					}
+					@Override
+					public void insertUpdate(DocumentEvent e) {
+						fireQueryChanged();
+					}
+					@Override
+					public void changedUpdate(DocumentEvent e) {
+						// Nothing to do here...
+					}
+				});
+			}
+			
+			return searchTextField;
+		}
+		
+		private void fireQueryChanged() {
+			firePropertyChange(QUERY_PROPERTY, null, null);
+		}
 	}
 	
 	private class TextIcon implements Icon {
