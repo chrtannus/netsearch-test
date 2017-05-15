@@ -3,18 +3,27 @@ package org.cytoscape.netsearchtest.internal.task;
 import java.awt.BorderLayout;
 import java.awt.Color;
 
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 
 public class CustomOptionsTaskFactory extends AbstractNetSearchTestTaskFactory {
 
+	private final ImageIcon ICON = new ImageIcon(getClass().getClassLoader().getResource("images/star-96.png"));
+	
 	public CustomOptionsTaskFactory() {
 		super(
 				"netsearchtest.test-b",
 				"B. Custom Options UI",
 				"Provides its own Options UI component"
 		);
+	}
+	
+	@Override
+	public Icon getIcon() {
+		return ICON;
 	}
 	
 	@Override
