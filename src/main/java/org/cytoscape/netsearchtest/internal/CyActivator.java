@@ -13,7 +13,7 @@ public class CyActivator extends AbstractCyActivator {
 	public void start(BundleContext bc) throws Exception {
 		CyServiceRegistrar serviceRegistrar = getService(bc, CyServiceRegistrar.class);
 		
-		registerAllServices(bc, new TunableOptionsTaskFactory());
+		registerAllServices(bc, new TunableOptionsTaskFactory(1));
 		registerAllServices(bc, new CustomOptionsTaskFactory());
 		registerAllServices(bc, new CustomQueryTaskFactory(serviceRegistrar));
 	}

@@ -3,6 +3,8 @@ package org.cytoscape.netsearchtest.internal.task;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import org.cytoscape.work.Tunable;
 import org.cytoscape.work.swing.util.UserAction;
@@ -42,12 +44,25 @@ public class TunableOptionsTaskFactory extends AbstractNetSearchTestTaskFactory 
 	@Tunable(description="Test UserAction")
 	public UserAction testUserAction = new UserAction(this);
 	
-	public TunableOptionsTaskFactory() {
+	private URL url;
+	
+	public TunableOptionsTaskFactory(int i) {
 		super(
-				"netsearchtest.test-a",
-				"A. Tunable Options",
+				"netsearchtest.test-a " + i,
+				"A. Tunable Options " + i,
 				"The seearch options are auto-generated from Tunables"
 		);
+		
+		try {
+			url = new URL("https://github.com/chrtannus/netsearch-test/blob/master/src/main/java/org/cytoscape/netsearchtest/internal/task/TunableOptionsTaskFactory.java");
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Override
+	public URL getWebsite() {
+		return url;
 	}
 
 	@Override

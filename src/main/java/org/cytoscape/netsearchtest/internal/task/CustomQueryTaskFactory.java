@@ -10,6 +10,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.swing.DefaultComboBoxModel;
@@ -39,7 +40,8 @@ public class CustomQueryTaskFactory implements NetworkSearchTaskFactory {
 	private static final String ID = "netsearchtest.test-c";
 	private static final String NAME = "C. Custom Query UI";
 	private static final String DESCRIPTION = "Provides its own Query UI component";
-	private final Icon ICON;
+	private final Icon icon;
+	private URL website;
 	
 	private QueryBar queryBar;
 	
@@ -47,7 +49,13 @@ public class CustomQueryTaskFactory implements NetworkSearchTaskFactory {
 	
 	public CustomQueryTaskFactory(CyServiceRegistrar serviceRegistrar) {
 		this.serviceRegistrar = serviceRegistrar;
-		ICON = new TextIcon();
+		icon = new TextIcon();
+		
+		try {
+			website = new URL("https://github.com/chrtannus/netsearch-test/blob/master/src/main/java/org/cytoscape/netsearchtest/internal/task/CustomQueryTaskFactory.java");
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@Override
@@ -92,12 +100,12 @@ public class CustomQueryTaskFactory implements NetworkSearchTaskFactory {
 
 	@Override
 	public Icon getIcon() {
-		return ICON;
+		return icon;
 	}
 
 	@Override
 	public URL getWebsite() {
-		return null;
+		return website;
 	}
 
 	@Override
