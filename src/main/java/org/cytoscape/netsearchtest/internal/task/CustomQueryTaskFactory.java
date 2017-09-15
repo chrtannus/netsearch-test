@@ -203,6 +203,10 @@ public class CustomQueryTaskFactory implements NetworkSearchTaskFactory {
 						// Nothing to do here...
 					}
 				});
+				searchTextField.addActionListener(e -> {
+					if (isReady())
+						fireSearchRequested();
+				});
 			}
 			
 			return searchTextField;
@@ -210,6 +214,10 @@ public class CustomQueryTaskFactory implements NetworkSearchTaskFactory {
 		
 		private void fireQueryChanged() {
 			firePropertyChange(QUERY_PROPERTY, null, null);
+		}
+		
+		private void fireSearchRequested() {
+			firePropertyChange(SEARCH_REQUESTED_PROPERTY, null, null);
 		}
 	}
 	
